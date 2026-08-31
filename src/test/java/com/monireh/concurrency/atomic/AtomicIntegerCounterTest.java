@@ -14,52 +14,98 @@ public class AtomicIntegerCounterTest {
         AtomicIntegerCounter counter =
                 new AtomicIntegerCounter();
 
+        //-------- with CountDownLatch for 10 Thread --------
+        int numberOfThreads = 10;
+        int incrementsPerThread = 100_000;
+
         CountDownLatch startLatch =
                 new CountDownLatch(1);
 
         CountDownLatch doneLatch =
-                new CountDownLatch(2);
+                new CountDownLatch(numberOfThreads);
 
-        Thread thread1 = new Thread(() -> {
+        for (int i = 0; i < numberOfThreads; i++) {
 
-            try {
-                startLatch.await();
+            Thread thread = new Thread(() -> {
 
-                for (int i = 0; i < 100_000; i++) {
-                    counter.increment();
+                try {
+                    startLatch.await();
+
+                    for (int j = 0;
+                         j < incrementsPerThread;
+                         j++) {
+
+                        counter.increment();
+                    }
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+
+                } finally {
+                    doneLatch.countDown();
                 }
+            });
 
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-
-            } finally {
-                doneLatch.countDown();
-            }
-        });
-
-        Thread thread2 = new Thread(() -> {
-
-            try {
-                startLatch.await();
-
-                for (int i = 0; i < 100_000; i++) {
-                    counter.increment();
-                }
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-
-            } finally {
-                doneLatch.countDown();
-            }
-        });
-
-        thread1.start();
-        thread2.start();
+            thread.start();
+        }
 
         startLatch.countDown();
 
         doneLatch.await();
+
+        int expected =
+                numberOfThreads * incrementsPerThread;
+
+        assertEquals(expected, counter.getCount());
+        //-------- with CountDownLatch --------
+//        CountDownLatch startLatch =
+//                new CountDownLatch(1);
+//
+//        CountDownLatch doneLatch =
+//                new CountDownLatch(2);
+//
+//        Thread thread1 = new Thread(() -> {
+//
+//            try {
+//                startLatch.await();
+//
+//                for (int i = 0; i < 100_000; i++) {
+//                    counter.increment();
+//                }
+//
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//
+//            } finally {
+//                doneLatch.countDown();
+//            }
+//        });
+//
+//        Thread thread2 = new Thread(() -> {
+//
+//            try {
+//                startLatch.await();
+//
+//                for (int i = 0; i < 100_000; i++) {
+//                    counter.increment();
+//                }
+//
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//
+//            } finally {
+//                doneLatch.countDown();
+//            }
+//        });
+//
+//        thread1.start();
+//        thread2.start();
+//
+//        startLatch.countDown();
+//
+//        doneLatch.await();
+
+        //-------- without CountDownLatch --------
 //        Thread thread1 = new Thread(() -> {
 //            for (int i = 0; i < 100_000; i++) {
 //                counter.increment();
@@ -78,6 +124,6 @@ public class AtomicIntegerCounterTest {
 //        thread1.join();
 //        thread2.join();
 
-        assertEquals(200_000, counter.getCount());
+//        assertEquals(200_000, counter.getCount());
     }
 }
