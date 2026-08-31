@@ -1,6 +1,7 @@
 package com.monireh.concurrency.synchronizedexample;
 
 
+import com.monireh.concurrency.support.ConcurrencyTestHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -8,6 +9,28 @@ import java.util.concurrent.CountDownLatch;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SynchronizedCounterTest {
+
+    @Test
+    void shouldIncrementSafelyWithMultipleThreads()
+            throws InterruptedException {
+
+        SynchronizedCounter counter =
+                new SynchronizedCounter();
+        int numberOfThreads = 10;
+        int incrementsPerThread = 100_000;
+
+        ConcurrencyTestHelper.runConcurrently(
+                numberOfThreads,
+                incrementsPerThread,
+                counter::increment
+        );
+
+        int expected =
+                numberOfThreads * incrementsPerThread;
+
+        assertEquals(expected, counter.getCount());
+
+    }
 
     @Test
     void shouldIncrementSafelyWhenMultipleThreadsAreUsed()
