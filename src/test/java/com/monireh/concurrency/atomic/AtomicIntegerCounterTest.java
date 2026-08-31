@@ -1,5 +1,6 @@
 package com.monireh.concurrency.atomic;
 
+import com.monireh.concurrency.support.ConcurrencyTestHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -7,6 +8,27 @@ import java.util.concurrent.CountDownLatch;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AtomicIntegerCounterTest {
+
+    @Test
+    void shouldIncrementSafelyWithMultipleThreads()
+            throws InterruptedException{
+        AtomicIntegerCounter counter =
+                new AtomicIntegerCounter();
+
+        int numberOfThreads = 10;
+        int incrementsPerThread = 100_000;
+
+        ConcurrencyTestHelper.runConcurrently(
+                numberOfThreads,
+                incrementsPerThread,
+                counter::increment
+        );
+
+        int expected =
+                numberOfThreads * incrementsPerThread;
+
+        assertEquals(expected, counter.getCount());
+    }
     @Test
     void shouldIncrementSafelyWhenMultipleThreadsAreUsed()
         throws InterruptedException {
